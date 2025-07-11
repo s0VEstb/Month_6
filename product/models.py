@@ -18,10 +18,14 @@ class Product(models.Model):
     def __str__(self):
         return self.title
 
+STARS = (
+    (i, '* ' * i) for i in range(1, 11)
+)
+
 class Review(models.Model):
     text = models.TextField()
     product = models.ForeignKey(Product, on_delete=models.CASCADE, related_name='reviews')
-    stars = models.PositiveSmallIntegerField(default=5)
+    stars = models.IntegerField(choices=STARS, default=10)
 
     def __str__(self):
         return f"Review for {self.product.title} - {self.stars} stars"
