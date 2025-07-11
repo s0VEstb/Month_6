@@ -3,10 +3,12 @@ from itertools import product
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from rest_framework import status
+from unicodedata import category
 
 from .models import Product, Category, Review
 from .serializers import CategorySerializer, ProductSerializer, ReviewSerializer, ProductDetailSerializer
-
+from .serializers import ProductWithReviewsSerializer, CategoryWithCountSerialzier
+from django.db.models import Count
 
 @api_view(['GET'])
 def category_list_api_view(request):
@@ -70,3 +72,26 @@ def review_detail_api_view(request, id):
                         status=status.HTTP_404_NOT_FOUND)
     data = ReviewSerializer(review).data
     return Response(data=data)
+
+@api_view(['GET'])
+def product_review_list_api_view(request):
+    product = Product.objects.all()
+
+    data = ProductWithReviewsSerializer(instance=product, many=True).data
+
+    return Response(
+        data=data,
+        status=status.HTTP_200_OK
+    )
+
+@api_view(['GET'])
+def category_count_list_api_view(request):
+    category = Category.objects.annotate(products_count=Count('products'))
+
+    data = CategoryWithCountSerialzier(instance=category, many=True).data
+
+
+    return Response(
+        data=data,
+        status=status.HTTP_200_OK
+    )
