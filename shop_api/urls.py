@@ -20,7 +20,7 @@ from product import views
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    path('api/v1/categories/', views.category_list_api_view),
+    path('api/v1/categories/', views.category_list_create_api_view),
     path('api/v1/categories/<int:id>/', views.category_detail_api_view),
     path('api/v1/product/', views.product_list_api_view),
     path('api/v1/product/<int:id>/', views.product_detail_api_view),
