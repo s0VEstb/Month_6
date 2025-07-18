@@ -1,3 +1,5 @@
+from itertools import product
+
 from rest_framework import serializers
 from unicodedata import category
 
@@ -70,3 +72,11 @@ class ReviewValidateSerializer(serializers.Serializer):
     text = serializers.CharField(required=False)
     product = serializers.IntegerField()
     stars = serializers.FloatField(min_value=1, max_value=11)
+
+    def validate(self, attrs):
+        product = attrs['product']
+        try:
+            Product.objects.get(id=product)
+        except Product.DoesNotExist:
+            raise ValidationError('Product does not exist!')
+        return attrs
