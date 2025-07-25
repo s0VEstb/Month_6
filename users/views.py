@@ -6,6 +6,55 @@ from .serializers import UserCreateSerializer, UserAuthSerializer, ConfirmUserSe
 from django.contrib.auth import authenticate
 from rest_framework.authtoken.models import Token
 from .models import ConfirmationCode
+from rest_framework.views import APIView
+import random
+
+
+class AuthorizationAPIView(APIView):
+    def post(self, request):
+        serializer = UserAuthSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+
+        username = serializer.validated_data['username']
+        password = serializer.validated_data['password']
+
+        user = authenticate(username=username, password=password)
+        if user:
+            token, _ = Token.objects.get_or_create(user=user)
+            return Response({'key': token.key})
+        return Response({'error': 'user credentials are wrong!'}, status=status.HTTP_401_UNAUTHORIZED)
+
+
+class RegistrationAPIView(APIView):
+    def post(self, request):
+        serializer = UserCreateSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+
+        username = serializer.validated_data.get('username')
+        password = serializer.validated_data.get('password')
+
+        user = User.objects.create_user(username=username, password=password, is_active=False)
+
+        code = ''.join([str(random.randint(0, 9)) for _ in range(6)])
+        ConfirmationCode.objects.create(user=user, code=code)
+
+        print(f'Код подтверждения для пользователя {username}: {code}')  # Для отладки
+
+        return Response(
+            {'user_id': user.id, 'detail': 'Пользователь создан. Проверьте код подтверждения.'},
+            status=status.HTTP_201_CREATED
+        )
+
+
+class ConfirmUserAPIView(APIView):
+    def post(self, request):
+        serializer = ConfirmUserSerializer(data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response({"detail": "Пользователь подтвержден и активирован"}, status=status.HTTP_200_OK)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
 
 @api_view(['POST'])
 def authorization_api_view(request):

@@ -7,6 +7,130 @@ from .serializers import CategorySerializer, ProductSerializer, ReviewSerializer
 from .serializers import ProductWithReviewsSerializer, CategoryWithCountSerialzier, ProductValidateSerializer, CategoryValidateSerializer
 from django.db.models import Count
 from django.db import transaction
+from rest_framework.generics import ListAPIView, ListCreateAPIView, RetrieveUpdateDestroyAPIView
+
+
+class CategoryListCreateAPIView(ListCreateAPIView):
+    queryset = Category.objects.all()
+
+    def get_serializer_class(self):
+        if self.request.method == 'POST':
+            return CategoryValidateSerializer
+        return CategorySerializer
+
+    def create(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        category = Category.objects.create(name=serializer.validated_data['name'])
+        return Response(CategorySerializer(category).data, status=status.HTTP_201_CREATED)
+
+
+class CategoryDetailAPIView(RetrieveUpdateDestroyAPIView):
+    queryset = Category.objects.all()
+    lookup_field = 'id'
+
+    def get_serializer_class(self):
+        if self.request.method in ['PUT', 'PATCH']:
+            return CategoryValidateSerializer
+        return CategorySerializer
+
+    def update(self, request, *args, **kwargs):
+        category = self.get_object()
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        category.name = serializer.validated_data['name']
+        category.save()
+        return Response(CategorySerializer(category).data, status=status.HTTP_201_CREATED)
+
+class ProductListCreateAPIView(ListCreateAPIView):
+    queryset = Product.objects.all()
+
+    def get_serializer_class(self):
+        if self.request.method == 'POST':
+            return ProductValidateSerializer
+        return ProductSerializer
+
+    def create(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        with transaction.atomic():
+            product = Product.objects.create(
+                title=serializer.validated_data['title'],
+                description=serializer.validated_data['description'],
+                price=serializer.validated_data['price'],
+                category_id=serializer.validated_data['category']
+            )
+        return Response(ProductSerializer(product).data, status=status.HTTP_201_CREATED)
+
+class ProductDetailAPIView(RetrieveUpdateDestroyAPIView):
+    queryset = Product.objects.all()
+    lookup_field = 'id'
+
+    def get_serializer_class(self):
+        if self.request.method in ['PUT', 'PATCH']:
+            return ProductValidateSerializer
+        return ProductDetailSerializer
+
+    def update(self, request, *args, **kwargs):
+        product = self.get_object()
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        product.title = serializer.validated_data['title']
+        product.description = serializer.validated_data['description']
+        product.price = serializer.validated_data['price']
+        product.category_id = serializer.validated_data['category']
+        product.save()
+        return Response(ProductDetailSerializer(product).data, status=status.HTTP_201_CREATED)
+
+class ReviewListCreateAPIView(ListCreateAPIView):
+    queryset = Review.objects.all()
+
+    def get_serializer_class(self):
+        if self.request.method == 'POST':
+            return ReviewValidateSerializer
+        return ReviewSerializer
+
+    def create(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        review = Review.objects.create(
+            text=serializer.validated_data['text'],
+            product_id=serializer.validated_data['product'],
+            stars=serializer.validated_data['stars']
+        )
+        return Response(ReviewSerializer(review).data, status=status.HTTP_201_CREATED)
+
+class ReviewDetailAPIView(RetrieveUpdateDestroyAPIView):
+    queryset = Review.objects.all()
+    lookup_field = 'id'
+
+    def get_serializer_class(self):
+        if self.request.method in ['PUT', 'PATCH']:
+            return ReviewValidateSerializer
+        return ReviewSerializer
+
+    def update(self, request, *args, **kwargs):
+        review = self.get_object()
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        review.text = serializer.validated_data['text']
+        review.product_id = serializer.validated_data['product']
+        review.stars = serializer.validated_data['stars']
+        review.save()
+        return Response(ReviewSerializer(review).data, status=status.HTTP_201_CREATED)
+
+class ProductWithReviewsAPIView(ListCreateAPIView):
+    queryset = Product.objects.all()
+    serializer_class = ProductWithReviewsSerializer
+
+
+class CategoryWithCountAPIView(ListCreateAPIView):
+    serializer_class = CategoryWithCountSerialzier
+
+    def get_queryset(self):
+        return Category.objects.annotate(products_count=Count('products'))
+
+
 
 @api_view(['GET', 'POST'])
 def category_list_create_api_view(request):
