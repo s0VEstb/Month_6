@@ -81,6 +81,15 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'shop_api.wsgi.application'
 
+SWAGGER_SETTINGS = {
+    'SECURITY_DEFINITIONS': {
+        'Token': {
+            'type': 'apiKey',
+            'name': 'Authorization',
+            'in': 'header',
+            'description': 'Token <token>'
+        }}
+}
 
 # Database
 # https://docs.djangoproject.com/en/5.2/ref/settings/#databases
