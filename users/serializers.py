@@ -4,7 +4,7 @@ from django.contrib.auth.models import User
 from .models import ConfirmationCode
 from django.contrib.auth import authenticate
 from users.models import CustomUser
-
+from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 
 
 class UserAuthSerializer(serializers.Serializer):
@@ -22,10 +22,11 @@ class UserAuthSerializer(serializers.Serializer):
 class UserCreateSerializer(serializers.Serializer):
     email = serializers.EmailField()
     password = serializers.CharField()
+    birthdate = serializers.DateField(required=False)
 
     class Meta:
         model = User
-        fields = ['id', 'email', 'username', 'password', 'phone', 'birth_date']
+        fields = ['id', 'email', 'username', 'password', 'phone', 'birthdate']
 
     def create(self, validated_data):
         user = CustomUser.objects.create_user(
@@ -33,7 +34,7 @@ class UserCreateSerializer(serializers.Serializer):
             username=validated_data['username'],
             password=validated_data['password'],
             phone=validated_data.get('phone'),
-            birth_date=validated_data.get('birth_date')
+            birthdate=validated_data.get('birthdate')
         )
         return user
 
@@ -73,4 +74,12 @@ class ConfirmUserSerializer(serializers.Serializer):
         user = self.validated_data['user']
         user.is_active = True
         user.save()
+
+
+class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
+    @classmethod
+    def get_token(cls, user):
+        token = super().get_token(user)
+        token['birthdate'] = str(user.birthdate)
+        return token
         

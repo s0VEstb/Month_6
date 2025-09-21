@@ -22,6 +22,7 @@ from rest_framework import permissions
 from django.urls import re_path
 
 
+
 schema_view = get_schema_view(
     openapi.Info(
         title="Твой API",

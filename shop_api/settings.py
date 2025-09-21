@@ -10,6 +10,7 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/5.2/ref/settings/
 """
 import os
+from datetime import timedelta
 from pathlib import Path
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -40,9 +41,11 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     "drf_yasg",
     'rest_framework',
+    'rest_framework_simplejwt',
     'product',
     'users',
-    'rest_framework.authtoken'
+    'rest_framework.authtoken',
+    'rest_framework_simplejwt.token_blacklist'
 ]
 
 MIDDLEWARE = [
@@ -58,7 +61,9 @@ MIDDLEWARE = [
 
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': [
-        'rest_framework.authentication.TokenAuthentication'
+        'rest_framework.authentication.TokenAuthentication',
+        #'rest_framework.authentication.SessionAuthentication',
+        'rest_framework_simplejwt.authentication.JWTAuthentication',
     ]
 }
 
@@ -88,7 +93,21 @@ SWAGGER_SETTINGS = {
             'name': 'Authorization',
             'in': 'header',
             'description': 'Token <token>'
-        }}
+        },
+        'Bearer': {
+            'type': 'apiKey',
+            'name': 'Authorization',
+            'in': 'header',
+            'description': 'Bearer <token>'
+}}}
+
+
+SIMPLE_JWT = {
+    "ACCESS_TOKEN_LIFETIME": timedelta(minutes=5),
+    "REFRESH_TOKEN_LIFETIME": timedelta(days=1),
+    "ROTATE_REFRESH_TOKENS": True,
+    "BLACKLIST_AFTER_ROTATION": True,
+    "UPDATE_LAST_LOGIN": False,
 }
 
 # Database

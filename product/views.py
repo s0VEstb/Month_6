@@ -8,6 +8,7 @@ from .serializers import ProductWithReviewsSerializer, CategoryWithCountSerialzi
 from django.db.models import Count
 from django.db import transaction
 from rest_framework.generics import ListAPIView, ListCreateAPIView, RetrieveUpdateDestroyAPIView
+from common.validators import validate_age
 
 
 class CategoryListCreateAPIView(ListCreateAPIView):
@@ -58,6 +59,9 @@ class ProductListCreateAPIView(ListCreateAPIView):
         return ProductSerializer
 
     def create(self, request, *args, **kwargs):
+        birthdate = request.user.birthdate
+        print(birthdate)
+        validate_age(birthdate)
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         with transaction.atomic():
